@@ -1,5 +1,5 @@
 <div class="wrap">
-    <h1>Notes</h1> 
+    <h1>Notes for Users</h1> 
     <!--show message-->
     <div id="message" class="updated notice notice-success below-h2">
         <p></p>

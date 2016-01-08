@@ -18,15 +18,28 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 /**
  * @author: PHPdev5
+ * [add_role_caps Get the administrator role then add cap. to manage plugin]
+ * @return [None]
+ */
+function add_role_caps() {
+    // gets the administrator role
+    $role = get_role( 'administrator' );
+
+    $role->add_cap( 'manage_search_export_users_plugin',true ); 
+}
+add_action( 'admin_init', 'add_role_caps');
+
+/**
+ * @author: PHPdev5
  * [export_users_actions Add menu page [Export Users] for our plugin]
  * @return [None]
  */
 function export_users_actions() {
     //add menu page for [Search plus Export Users] plugin
-    add_menu_page( "Export Users", "Export Users", 'manage_options', "export_users", "export_users_fn", "dashicons-format-aside", 26 );
+    add_menu_page( "Export Users", "Export Users", 'manage_search_export_users_plugin', "export_users", "export_users_fn", "dashicons-format-aside", 26 );
     
     //add submenu page for setting page
-    add_submenu_page( 'export_users', 'Notes Setting', 'Notes', 'manage_options', 'notes', 'setting_fn' );
+    add_submenu_page( 'export_users', 'Notes Setting', 'Notes', 'manage_search_export_users_plugin', 'notes', 'setting_fn' );
 }
 
 add_action( 'admin_menu', 'export_users_actions' );

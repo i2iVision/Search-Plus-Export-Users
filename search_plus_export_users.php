@@ -4,7 +4,7 @@
  * @package Search plus Export Users
  */
 /**
- * Plugin Name: Search plus Export Users
+ * Plugin Name: Search plus Export Users (SPEU)
  * Plugin URI: http://www.i2ivision.com
  * Description: Search (filter) for users based on specific keywords then export results in CSV file
  * Author: i2ivision ( PHPdev5 )
@@ -12,27 +12,26 @@
  * Author URI: http://www.i2ivision.com
  */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
-?>
 
-<?php
+
 
 /**
  * @author: PHPdev5
- * [add_role_caps Get the administrator role then add cap. to manage plugin]
- * @return [None]
+ * add_role_caps Get the administrator role then add cap. to manage plugin
+ * @return None
  */
 function add_role_caps() {
     // gets the administrator role
     $role = get_role( 'administrator' );
-
+    // add capability to administrator
     $role->add_cap( 'manage_search_export_users_plugin',true ); 
 }
 add_action( 'admin_init', 'add_role_caps');
 
 /**
  * @author: PHPdev5
- * [export_users_actions Add menu page [Export Users] for our plugin]
- * @return [None]
+ * export_users_actions Add menu page [Export Users] for our plugin
+ * @return None
  */
 function export_users_actions() {
     //add menu page for [Search plus Export Users] plugin
@@ -46,8 +45,8 @@ add_action( 'admin_menu', 'export_users_actions' );
 
 /**
  * @author: PHPdev5
- * [export_users_fn Build the Back-End of our plugin]
- * @return [None]
+ * export_users_fn Build the Back-End of our plugin
+ * @return None
  */
 function export_users_fn() {
     /**
@@ -59,8 +58,8 @@ function export_users_fn() {
 
 /**
  * @author: PHPdev5
- * [setting_fn Build the Setting page of our plugin]
- * @return [None]
+ * setting_fn Build the Setting page of our plugin
+ * @return None
  */
 function setting_fn() {
     require_once( 'setting.php' );
@@ -68,8 +67,8 @@ function setting_fn() {
 
 /**
  * @author: PHPdev5
- * [plugin_helper_scripts Enqueue Scripts & Styles]
- * @return [None]
+ * plugin_helper_scripts Enqueue Scripts & Styles
+ * @return None
  */
 function plugin_helper_scripts() {
     wp_enqueue_script( 'script_get_users', plugins_url( '/js/get_users.js', __FILE__ ) );
@@ -82,8 +81,8 @@ add_action( 'admin_init', 'plugin_helper_scripts' );
 
 /**
  * @author: PHPdev5
- * [my_load_meta_key load all meta_key in drop down menu]
- * @return [Array]
+ * load_meta_key load all meta_key in drop down menu
+ * @return Array
  */
 function load_meta_key() {
     check_ajax_referer( 'bk-ajax-nonce', 'security' );
@@ -96,13 +95,12 @@ function load_meta_key() {
     wp_send_json( $customvalue );
 }
 
-add_action( 'wp_ajax_nopriv_load-meta', 'load_meta_key' );
 add_action( 'wp_ajax_load-meta', 'load_meta_key' );
 
 /**
  * @author: PHPdev5
- * [view_all_users Get all users on site]
- * @return [Array]
+ * view_all_users Get all users on site
+ * @return Array
  */
 function view_all_users() {
     check_ajax_referer( 'bk-ajax-nonce', 'security' );
@@ -114,14 +112,13 @@ function view_all_users() {
     wp_send_json( $content );
 }
 
-add_action( 'wp_ajax_nopriv_get_all_users', 'view_all_users' );
 add_action( 'wp_ajax_get_all_users', 'view_all_users' );
 
 
 /**
  * @author: PHPdev5
- * [generate_csv Generate CSV file including Search Results]
- * @return [None]
+ * generate_csv Generate CSV file including Search Results
+ * @return None
  */
 function generate_csv() {
     if ( isset( $_POST['download_csv'] ) ) {
@@ -134,25 +131,46 @@ function generate_csv() {
         header( 'Content-Type: text/csv; charset=utf-8' );
         header( 'Content-Disposition: attachment; filename=' . $name );
         $op = fopen( 'php://output', 'a' );
-        $en_active_export = append_all_meta( 1 );
-        $count = 0;
-        if ( !empty( $en_active_export ) ) {
+        $meta_key = $_REQUEST["meta_name"];
+        $users_id = $_POST['idusers'];
+        $export_by_ID = $_POST['export_by_id'];
+        if( !empty( $export_by_ID ) ) {
+            $by_ID = explode( ",", $export_by_ID );
+            $args = array( 'include'  => $by_ID );
+        }
+        else if( !empty( $users_id ) ) {
+            $by_ID = explode( ",", $users_id ); 
+            $args = array( 'include'  => $by_ID );             
+        }
+        else if( empty( $export_by_ID ) ) {
+            $args = array( 'include'  => array() );
+        }     
             if ( $_REQUEST["hidden_val"] == "D" ) {
                 $finalHeader = array( 'ID', 'User Name', 'E-mail' );
             } else {
                 $meta_key = $_REQUEST["meta_name"];
-                $headerArray = array( 'ID', 'User Name', 'E-mail' );
-                $headermerge = array_merge( $headerArray, $meta_key );
-                $finalHeader = array_unique( $headermerge );
+                if( in_array( "no_value", $meta_key ) ) {
+                    $finalHeader = array( 'ID', 'User Name', 'E-mail' );
+                } else {
+                    $headerArray = array( 'ID', 'User Name', 'E-mail' );
+                    $headermerge = array_merge( $headerArray, $meta_key );
+                    $finalHeader = array_unique( $headermerge );
+                }
             }
             fputcsv( $op, $finalHeader );
-            foreach ( $en_active_export as $row ) {
-                fputcsv( $op, $row );
-                $count++;
+            $export_those_users = get_users( $args );
+            foreach ( $export_those_users as $user ) {
+                $content_keys = array();
+                $metakey = array_unique( $meta_key );
+                foreach ( $metakey as $single_key ) {
+                    $content_keys[] = get_user_meta( $user->ID, $single_key, true );
+                }
+                $content = array( $user->ID, $user->display_name, $user->user_email );
+                $en_active_export[] = array_merge( $content, $content_keys );
             }
-        } else {
-            fputcsv( $op, "" );
-        }
+            foreach( $en_active_export as $final_export ) {
+                fputcsv( $op, $final_export ); 
+            } 
         fclose( $op );
         die();
     }
@@ -162,10 +180,10 @@ add_action( "admin_init", 'generate_csv' );
 
 /**
  * @author: PHPdev5
- * @Description: Get users based on Specific Values  
- * @return [Array]
+ * append_all_meta Get users based on Specific Values  
+ * @return Array
  */
-function append_all_meta( $check = 0 ) {
+function append_all_meta() {
     $operation = $_REQUEST["op_args"];
     $meta_key = $_REQUEST["meta_name"];
     $meta_value = $_REQUEST["meta_value"];
@@ -174,15 +192,6 @@ function append_all_meta( $check = 0 ) {
     if ( $role_data == 'no_role' ) {
         $role_data = '';
     }
-    if ( $_REQUEST["hidden_val"] == "D" ) {
-        $content = array();
-        $all_users = get_users();
-        foreach ( $all_users as $e_user ) {
-            $content[] = array( $e_user->ID, $e_user->display_name, $e_user->user_email );
-        }
-        return $content;
-    }
-
     // Allow Duplicate Keys or Values for Associative Array
     function duplicateKeys( $key, $val ) {
         return array( $key => $val );
@@ -204,44 +213,33 @@ function append_all_meta( $check = 0 ) {
     $args = array(
                    'role'       => $role_data,
                    'meta_query' => $queryArray
-                );
+                  );
     $all_users = get_users( $args );
-    //To return users in CSV file
-    if ( $check == 1 ) {
-        $content = array();
-        foreach ( $all_users as $user ) {
-            $content_keys = array();
-            $metakey = array_unique( $meta_key );
-            foreach ( $metakey as $single_key ) {
-                $content_keys[] = get_user_meta( $user->ID, $single_key, true );
-            }
-            $content = array( $user->ID, $user->display_name, $user->user_email );
-            $finalcontent[] = array_merge( $content, $content_keys );
-        }
-        return $finalcontent;
-    }
-    //End
     check_ajax_referer( 'bk-ajax-nonce', 'security' );
     $resultSearch = array();
+    $IdsArray = array();
     if ( $all_users ) {
         foreach ( $all_users as $each_user ) {
-            $resultSearch[] = array( "id" => $each_user->ID, "username" => $each_user->display_name, "email" => $each_user->user_email );
+            $resultSearch[] = array( "userid" => $each_user->ID, "username" => $each_user->display_name, "email" => $each_user->user_email );
+            $IdsArray[] = array($each_user->ID);
         }
-        wp_send_json( $resultSearch );
+        $FinalArray = array("dataTable" => $resultSearch,
+                            "IDs"       => $IdsArray
+                            );
+        wp_send_json( $FinalArray );
     } else {
-        $resultSearch = -1;
-        wp_send_json( $resultSearch );
+        $FinalArray = -1;
+        wp_send_json( $FinalArray );
     }
     die;
 }
 
-add_action( 'wp_ajax_nopriv_append_meta', 'append_all_meta' );
 add_action( 'wp_ajax_append_meta', 'append_all_meta' );
 
 /**
  * @author: PHPdev5
- * @Description: Get Users'Role in Drop-Down Menu 
- * @return [string]  
+ * users_roles Get Users'Role in Drop-Down Menu 
+ * @return string
  */
 function users_roles() {
     check_ajax_referer( 'bk-ajax-nonce', 'security' );
@@ -253,13 +251,13 @@ function users_roles() {
     echo $role_data;
     die();
 }
-add_action( 'wp_ajax_nopriv_user-role', 'users_roles' );
+
 add_action( 'wp_ajax_user-role', 'users_roles' );
 
 /**
  * @author: PHPdev5
- * [setting_notes Add Notes for Users that used the plugin]
- * @return [None]
+ * setting_notes Add Notes for Users that used the plugin
+ * @return None
  */
 function setting_notes() {
     if ( isset($_POST["save_notes"] ) ) {
@@ -273,4 +271,96 @@ function setting_notes() {
 }
 
 add_action( "admin_init", 'setting_notes' );
+
+
+/**
+ * @author: PHPdev5
+ * add_custom_bulk_action_for_users Add Bulk Action for Users Table
+ * @return None
+ */
+function add_custom_bulk_action_for_users() {
+    global $WP_Screen;
+    $screen_id = get_current_screen();
+    if($screen_id->id == 'users') {
+    ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function() {
+                jQuery('<option>').val('export').text('Export').appendTo("select[name='action']");
+                jQuery('<option>').val('export').text('Export').appendTo("select[name='action2']");
+            });
+        </script>
+    <?php
+    }
+}
+add_action('admin_footer', 'add_custom_bulk_action_for_users');
+
+/**
+ * @author: PHPdev5
+ * user_action_links Add Row Action for Users Table List
+ * @return Array
+ */
+function user_action_links($actions, $user_object) {
+    $actions['export_user'] = "<a class='export_this_user' user-id='". $user_object->ID. "' href='" . wp_nonce_url(admin_url( "admin.php?page=export_users&ids=$user_object->ID"), "export_this_user" ,"wp_http_referer" ) ."'>Export</a>";
+    return $actions;
+}
+
+add_filter('user_row_actions', 'user_action_links', 10, 2);
+
+
+/**
+ * @author: PHPdev5
+ * selected_bulk_action_handler Process Selected Bulk Action
+ * @return None
+ */
+function selected_bulk_action_handler() {
+    $ids = $_GET["users"];
+    if( empty( $ids ) ) {
+        return 0;
+    }
+    else {
+        $url = 'admin.php?page=export_users&ids=';
+        foreach( $ids as $this_id ) {
+            $url .= $this_id.',';
+        }
+        wp_redirect( $url );
+        exit(); 
+    }
+}
+
+add_action( 'admin_action_export', 'selected_bulk_action_handler' );
+
+
+/**
+ * @author: PHPdev5
+ * export_users_lists_action Add Bulk Action (export user) on Admin Users Page
+ * @return Array
+ */
+function export_users_lists_action() {
+    $ids = $_REQUEST['ids'];
+    if( !empty( $ids ) ) {
+        if( strlen( $ids ) > 1 ) {
+            $e_id = explode( ',', $ids );
+            array_pop( $e_id );
+            $args = array( 'include'  => $e_id );
+        }
+        else {
+           $args = array( 'include'  => $ids ); 
+        }
+        $usersData = get_users( $args );
+        $content = array();
+        foreach( $usersData as $user ) {
+            $content[] = array( "userid"    => $user->ID,
+                                "username"  => $user->display_name,
+                                "useremail" => $user->user_email 
+                               );
+        }
+        wp_send_json( $content );
+    } else {
+        echo -1;
+        die();
+    }
+}
+
+add_action( 'wp_ajax_export-users-lists', 'export_users_lists_action' );
+
 ?>

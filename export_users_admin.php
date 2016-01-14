@@ -85,6 +85,7 @@
         <div class="line-separator"></div>
         <span class="no_items">0 item</span>
         <!--table for showing data-->
+        <input type="hidden" name="export_by_id" class="export_by_id" value="" />
         <table class="wp-list-table widefat fixed striped">
             <thead>
             <th style="font-weight:bold;">ID</th>
@@ -99,6 +100,7 @@
             <!-- Export Buttton -->
             <input type="submit" class="button-primary export_csv" name="download_csv" value="Export" />
         </p>
+        <input type="hidden" name="idusers" class="id_users" value="<?php echo $_GET['ids'] ?>" />
     </form>
 
 </div>

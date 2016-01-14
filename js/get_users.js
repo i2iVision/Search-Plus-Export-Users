@@ -1,6 +1,6 @@
 /*=========== [PHPdev5] Scripts for Search plus Export Users plugin ===========*/
 
-//================= [PHPdev5] function used to get meta key ====================
+//================= [PHPdev5] function to get meta key ====================
 function meta_key_data() {
     jQuery.post(
             MyAjax.ajaxurl,
@@ -9,7 +9,7 @@ function meta_key_data() {
                 security: jQuery( '#bk-ajax-nonce' ).val(),
             },
     function( meta ) {
-        var meta_key_menu = "";
+        var meta_key_menu = '<option value="no_value">Select Meta Key</option>';
         var i;
         for ( i in meta ) {
             meta_key_menu += '<option value="' + meta[i].meta_key + '">' + meta[i].meta_key + '</option>';
@@ -20,7 +20,7 @@ function meta_key_data() {
     );
 }
 
-//================= [PHPdev5] Get Users'Role ====================
+//================= [PHPdev5] function to Get Users'Role ====================
 function get_users_role() {
     jQuery.post(
             MyAjax.ajaxurl,
@@ -34,8 +34,52 @@ function get_users_role() {
     );
 }
 
+//======== [PHPdev5] function to Export Action for Users Table Lists =========
+function export_users_lists() {
+    if( jQuery( 'input.id_users' ).val() !="" ) {
+        jQuery( 'input.export_csv' ).removeAttr( 'disabled' );
+    }
+    var ids = jQuery('.id_users').val();
+    jQuery.post(
+        MyAjax.ajaxurl,
+        {
+            action: 'export-users-lists',
+            ids: ids
+        },
+        function( usersdata ) {
+            if( usersdata != -1 ) {   
+                var data = '';
+                var i;
+                for ( i in usersdata ) {
+                    data += "<tr class='results'><td>" + usersdata[i].userid + "</td>";
+                    data += "<td>" + usersdata[i].username + "</td>";
+                    data += "<td>" + usersdata[i].useremail + "</td></tr>";
+                }
+                jQuery( ".show_content" ).html( data );
+                var count = jQuery( ".results" ).length;
+                if ( count == 0 ) {
+                    jQuery( ".no_items" ).text( "0 item" );
+                }
+                else if ( count == 1 ) {
+                    jQuery( ".no_items" ).text( "1 item" );
+                }
+                else {
+                    jQuery( ".no_items" ).text( count + " " + "items" );
+                }      
+            }
+            else {
+              jQuery( ".show_content" ).html("<td>No Data</td>");  
+            } 
+        }
+    );
+}
+
 
 jQuery(document).ready(function($) {
+
+   jQuery( 'input.export_csv' ).attr( 'disabled', 'disabled' );
+//================= [PHPdev5] Call Function export_users_lists() ====================  
+    export_users_lists();
 
 //================= [PHPdev5] Call Function meta_key_data() ====================   
     meta_key_data();
@@ -46,6 +90,8 @@ jQuery(document).ready(function($) {
 //================= [PHPdev5] used to get all users ===================
     jQuery( '.btn_get_all' ).on( 'click', function(e) {
         e.preventDefault();
+        jQuery('.id_user').removeAttr('value');
+        jQuery('.id_users').removeAttr('value');
         jQuery.post(
             MyAjax.ajaxurl,
             {
@@ -120,6 +166,7 @@ jQuery(document).ready(function($) {
 //================= [PHPdev5] Search for users based on added value =====================
     jQuery( '.btn_get' ).on( 'click', function(e) {
         e.preventDefault();
+        jQuery('.export_by_id').removeAttr( 'value' );
         jQuery( ".hidden_val" ).removeAttr( "value" );
         var op = jQuery( "input.op_args:checked" ).val();
         var select_data = "";
@@ -150,7 +197,7 @@ jQuery(document).ready(function($) {
                     user_role: role_value,
                 },
                 function( appenddata ) {
-                    if (appenddata == -1) {
+                    if ( appenddata == -1 ) {
                         jQuery( ".loader_show" ).fadeIn();
                         jQuery( ".show_content" ).html( "<td>no data found</td>" );
                         jQuery( ".no_items" ).text( "0 item" );
@@ -166,11 +213,11 @@ jQuery(document).ready(function($) {
                         jQuery( "input.export_csv" ).removeAttr( "disabled" );
                         jQuery( ".loader_show" ).fadeIn();
                         var i;
-                        for ( i in appenddata )
+                        for ( i in appenddata.dataTable )
                         {
-                            data += "<tr class='results'><td>" + appenddata[i].id + "</td>";
-                            data += "<td>" + appenddata[i].username + "</td>";
-                            data += "<td>" + appenddata[i].email + "</td></tr>";
+                            data += "<tr class='results'><td>" + appenddata.dataTable[i].userid + "</td>";
+                            data += "<td>" + appenddata.dataTable[i].username + "</td>";
+                            data += "<td>" + appenddata.dataTable[i].email + "</td></tr>";
 
                         }
                         jQuery( ".show_content" ).html( data );
@@ -187,6 +234,7 @@ jQuery(document).ready(function($) {
                         jQuery( "#message" ).show();
                         jQuery( ".notice-success p" ).text( "Now, You Can Export Results on Excel Sheet" );
                         jQuery( ".loader_show" ).fadeOut();
+                        jQuery(".export_by_id").val(appenddata.IDs);
                     }
                 }
         );

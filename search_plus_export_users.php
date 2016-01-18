@@ -14,7 +14,6 @@
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 
-
 /**
  * @author: PHPdev5
  * add_role_caps Get the administrator role then add cap. to manage plugin
@@ -50,9 +49,9 @@ add_action( 'admin_menu', 'export_users_actions' );
  */
 function export_users_fn() {
     /**
-     * [$html_template filter hook to allow users for changing plugin's template page]
+     * $html_template filter hook to allow users for changing plugin's template page
      */
-    $html_template = apply_filters( 'export_users_table_template','export_users_admin.php' );
+    $html_template = apply_filters( 'export_users_template','includes/export_users_admin.php' );
     require_once( $html_template );
 }
 
@@ -62,7 +61,7 @@ function export_users_fn() {
  * @return None
  */
 function setting_fn() {
-    require_once( 'setting.php' );
+    require_once( 'includes/setting.php' );
 }
 
 /**
@@ -71,9 +70,9 @@ function setting_fn() {
  * @return None
  */
 function plugin_helper_scripts() {
-    wp_enqueue_script( 'script_get_users', plugins_url( '/js/get_users.js', __FILE__ ) );
-    wp_enqueue_script( 'script_Block_UI', plugins_url( '/js/jquery.blockUI.js', __FILE__ ) );
-    wp_enqueue_style( 'script_get_users', plugins_url( '/css/styles.css', __FILE__ ) );
+    wp_enqueue_script( 'script_get_users', plugins_url( 'assets/js/get_users.js', __FILE__ ) );
+    wp_enqueue_script( 'script_Block_UI', plugins_url( 'assets/js/jquery.blockUI.js', __FILE__ ) );
+    wp_enqueue_style( 'script_get_users', plugins_url( 'assets/css/styles.css', __FILE__ ) );
     wp_localize_script( 'script_get_users', 'MyAjax', array( 'ajaxurl'   => admin_url( 'admin-ajax.php' ) ) );
 }
 
@@ -99,15 +98,52 @@ add_action( 'wp_ajax_load-meta', 'load_meta_key' );
 
 /**
  * @author: PHPdev5
+ * getFieldSearch Get fields for get_users() arguments
+ * @return Array
+ */
+function getFieldSearch() {
+    $actual_fields = array( 'ID','user_login','user_nicename','user_email','user_url','user_registered','user_status','display_name' );
+    $speu_fields = array( 'ID'            => 'ID',
+                          'display_name'  => 'User Name',
+                          'user_email'    => 'E-mail'
+                        );
+    /**
+     * Fires immediately after the plugin loads.
+     * @since 0.1.5 beta
+     * @param Array    $all_fields array of fields in WP_USER.
+     */
+    $all_fields = apply_filters( 'speu_add_fields' , $speu_fields ); 
+    $fileds_search = array_keys( $all_fields );
+    $expected_fields = array_diff( $fileds_search ,$actual_fields );
+    if( empty( $expected_fields ) ) {
+        return $all_fields;
+    }
+    else {
+        foreach( $expected_fields as $keys => $expected_value ) {
+            unset( $fileds_search[$keys] );
+            unset( $all_fields[$expected_value] );
+        }
+        return $all_fields;
+    }
+}
+
+
+/**
+ * @author: PHPdev5
  * view_all_users Get all users on site
  * @return Array
  */
 function view_all_users() {
     check_ajax_referer( 'bk-ajax-nonce', 'security' );
-    $content = array();
-    $all_users = get_users();
+    $all_fields = getFieldSearch();
+    $fields_key = array_keys( $all_fields );
+    $args = array( 'fields'   => $fields_key , 
+                   'orderby'  => 'ID', 
+                   'order'    => 'ASC'
+                 );
+    $all_users = get_users( $args );
     foreach ( $all_users as $e_user ) {
-        $content[] = array( "userid" => $e_user->ID, "username" => $e_user->display_name, "useremail" => $e_user->user_email );
+        $content[] = $e_user;
     }
     wp_send_json( $content );
 }
@@ -122,37 +158,63 @@ add_action( 'wp_ajax_get_all_users', 'view_all_users' );
  */
 function generate_csv() {
     if ( isset( $_POST['download_csv'] ) ) {
+        $all_fields = getFieldSearch();
+        $all_keys = array_keys( $all_fields );
+        $all_values = array_values( $all_fields );
         $nonce = $_REQUEST['_wpnonce'];
         if ( !wp_verify_nonce( $nonce, 'export-form' ) ) {
             die( 'Security check' );
         }
         ob_end_clean();
-        $name = "export-results_" . date('Y-m-d') . ".csv";
+        /**
+         * Fires immediately after the user generates CSV file.
+         * @since 0.1.5 beta
+         * @param string    $file_name The name of CSV file generated.
+         */
+        $file_name = apply_filters( 'speu_csv_file_name', "export-results_" . date( 'Y-m-d' )  );
+        $file_ext =  ".csv";
+        $name = $file_name.$file_ext;
         header( 'Content-Type: text/csv; charset=utf-8' );
         header( 'Content-Disposition: attachment; filename=' . $name );
+        header("Pragma: no-cache");
+        header("Expires: 0");    
         $op = fopen( 'php://output', 'a' );
+        $time_now = fputcsv($op, array( "", "Created File at :".date( "Y-m-d h:i:s:a" ) ) );
         $meta_key = $_REQUEST["meta_name"];
         $users_id = $_POST['idusers'];
         $export_by_ID = $_POST['export_by_id'];
         if( !empty( $export_by_ID ) ) {
             $by_ID = explode( ",", $export_by_ID );
-            $args = array( 'include'  => $by_ID );
+            $args = array( 'include'    => $by_ID ,
+                           'fields'     => $all_keys , 
+                           'orderby'    => 'ID', 
+                           'order'      => 'ASC' 
+                         );
         }
         else if( !empty( $users_id ) ) {
             $by_ID = explode( ",", $users_id ); 
-            $args = array( 'include'  => $by_ID );             
+            $args = array( 'include'    => $by_ID , 
+                           'fields'     => $all_keys , 
+                           'orderby'    => 'ID', 
+                           'order'      => 'ASC'
+                         );             
         }
         else if( empty( $export_by_ID ) ) {
-            $args = array( 'include'  => array() );
+            $args = array( 'include'    => array() , 
+                           'fields'     => $all_keys , 
+                           'orderby'    => 'ID', 
+                           'order'      => 'ASC'
+                          );
+            $meta_key = array();
         }     
             if ( $_REQUEST["hidden_val"] == "D" ) {
-                $finalHeader = array( 'ID', 'User Name', 'E-mail' );
+                $finalHeader = $all_values;
             } else {
                 $meta_key = $_REQUEST["meta_name"];
                 if( in_array( "no_value", $meta_key ) ) {
-                    $finalHeader = array( 'ID', 'User Name', 'E-mail' );
+                    $finalHeader = $all_values;
                 } else {
-                    $headerArray = array( 'ID', 'User Name', 'E-mail' );
+                    $headerArray = $all_values;
                     $headermerge = array_merge( $headerArray, $meta_key );
                     $finalHeader = array_unique( $headermerge );
                 }
@@ -161,15 +223,20 @@ function generate_csv() {
             $export_those_users = get_users( $args );
             foreach ( $export_those_users as $user ) {
                 $content_keys = array();
+                $content = array();
                 $metakey = array_unique( $meta_key );
                 foreach ( $metakey as $single_key ) {
                     $content_keys[] = get_user_meta( $user->ID, $single_key, true );
                 }
-                $content = array( $user->ID, $user->display_name, $user->user_email );
-                $en_active_export[] = array_merge( $content, $content_keys );
+            reset( $user );
+            while( list($key, $val) = each( $user ) ) {
+                $content[] = $val;
             }
-            foreach( $en_active_export as $final_export ) {
-                fputcsv( $op, $final_export ); 
+                // $content = array( $user->ID , $user->display_name , $user->user_email  );
+                $en_active_export[] = array_merge( $content, $content_keys );             
+            }
+            foreach( $en_active_export as $value ) {
+                fputcsv( $op, $value ); 
             } 
         fclose( $op );
         die();
@@ -184,11 +251,15 @@ add_action( "admin_init", 'generate_csv' );
  * @return Array
  */
 function append_all_meta() {
+    check_ajax_referer( 'bk-ajax-nonce', 'security' );
     $operation = $_REQUEST["op_args"];
     $meta_key = $_REQUEST["meta_name"];
     $meta_value = $_REQUEST["meta_value"];
     $meta_compare = $_REQUEST["meta_compare"];
     $role_data = $_REQUEST["user_role"];
+    $all_fields = getFieldSearch();
+    $all_keys = array_keys( $all_fields );
+    $all_values = array_values( $all_fields );
     if ( $role_data == 'no_role' ) {
         $role_data = '';
     }
@@ -198,7 +269,6 @@ function append_all_meta() {
     }
     $arrayResult = array_map( 'duplicateKeys', $meta_key, $meta_value );
     //End
-
     $queryArray = array( 'relation' => $operation );
     $count = 0;
     foreach ( $arrayResult as $key => $value ) {
@@ -211,20 +281,23 @@ function append_all_meta() {
         }
     }
     $args = array(
+                   'fields'     => $all_keys,
+                   'orderby'    => 'ID',
+                   'order'      => 'ASC',
                    'role'       => $role_data,
                    'meta_query' => $queryArray
                   );
+    // print_r($args);die();
     $all_users = get_users( $args );
-    check_ajax_referer( 'bk-ajax-nonce', 'security' );
-    $resultSearch = array();
-    $IdsArray = array();
+    // print_r($all_users);die();
     if ( $all_users ) {
         foreach ( $all_users as $each_user ) {
-            $resultSearch[] = array( "userid" => $each_user->ID, "username" => $each_user->display_name, "email" => $each_user->user_email );
-            $IdsArray[] = array($each_user->ID);
+            $resultSearch[] = $each_user;
+            $IdsArray[] = array( $each_user->ID );
         }
-        $FinalArray = array("dataTable" => $resultSearch,
-                            "IDs"       => $IdsArray
+        $FinalArray = array( "dataTable" => $resultSearch,
+                             "IDs"       => $IdsArray,
+                             "Header"    => $all_values
                             );
         wp_send_json( $FinalArray );
     } else {
@@ -244,9 +317,15 @@ add_action( 'wp_ajax_append_meta', 'append_all_meta' );
 function users_roles() {
     check_ajax_referer( 'bk-ajax-nonce', 'security' );
     global $wp_roles;
+    /**
+     * Fires immediately after the user generates CSV file.
+     * @since 0.1.5 beta
+     * @param Array    $all_roles Users Roles.
+     */
+    $all_roles = apply_filters( 'speu_roles_search' , $wp_roles->role_names ); 
     $role_data = '<option value="no_role">All</option>';
-    foreach ( $wp_roles->role_names as $role => $name ) :
-        $role_data .='<option value="' . $role . '">' . $role . '</option>';
+    foreach ( $all_roles as $role => $name ) :
+        $role_data .='<option value="' . $role . '">' . $name . '</option>';
     endforeach;
     echo $role_data;
     die();
@@ -337,22 +416,30 @@ add_action( 'admin_action_export', 'selected_bulk_action_handler' );
  */
 function export_users_lists_action() {
     $ids = $_REQUEST['ids'];
+    $all_fields = getFieldSearch();
+    $all_keys = array_keys( $all_fields );
+    $all_values = array_values( $all_fields );
     if( !empty( $ids ) ) {
         if( strlen( $ids ) > 1 ) {
             $e_id = explode( ',', $ids );
             array_pop( $e_id );
-            $args = array( 'include'  => $e_id );
+            $args = array( 'include'    => $e_id , 
+                           'fields'     => $all_keys , 
+                           'orderby'    => 'ID', 
+                           'order'      => 'ASC' 
+                        );
         }
         else {
-           $args = array( 'include'  => $ids ); 
+           $args = array( 'include'    => $ids , 
+                          'fields'     => $all_keys , 
+                          'orderby'    => 'ID', 
+                          'order'      => 'ASC' 
+                        ); 
         }
         $usersData = get_users( $args );
         $content = array();
         foreach( $usersData as $user ) {
-            $content[] = array( "userid"    => $user->ID,
-                                "username"  => $user->display_name,
-                                "useremail" => $user->user_email 
-                               );
+            $content[] = $user;
         }
         wp_send_json( $content );
     } else {

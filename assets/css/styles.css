@@ -1,0 +1,155 @@
+/*=========== [WR] stylesheet for Search plus Export Users plugin ===========*/
+
+.line-separator{
+    margin-top:25px;
+    height:1px;
+}
+
+#message {
+    width:505px;
+}
+
+.notice-success {
+    display:none;
+}
+
+input.btn_get_all.button-primary {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+select.meta_name.primary {
+    margin-top: -3px;
+}
+
+input.meta_value {
+    height: 29px;
+}
+
+.loader {
+    margin-top: 2px;
+    margin-bottom: 34px;
+}
+
+.loader_show {
+    display:none;
+    margin-left: 15px;
+}
+
+.wp-admin input.add_btn {
+    background-color: #337ab7;
+    border: 0px;
+    border-radius: 35px;
+    color: white;
+    font-size: 15px;
+    margin-left: 29px;
+    float: left;
+    margin-top: -40px;
+}
+
+.wp-admin input.add_btn:hover {
+    background-color: #e14d43 !important;
+    color:white !important;
+}
+
+.wp-admin input.removemeta_btn {
+    background-color: #337ab7;
+    border: 0px;
+    border-radius: 35px;
+    color: white;
+    font-size: 15px;
+    margin-left: 5px;
+}
+
+.wp-admin input.removemeta_btn:hover {
+    background-color: #e14d43 !important;
+    color:white !important;
+}
+
+.right {
+    float: right;
+}
+
+.notes_users {
+    width:480px;
+    height:245px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.pos_div {
+    position: relative;
+}
+
+.notes {
+    width: 290px;
+    height: 50px;
+    float: right;
+    /*margin-top: -122px;*/
+    /*margin-right: 47px;*/
+    position: absolute;
+    right: 46px;
+    top: -138px;
+}
+
+.form_notes {
+    background-color: white;
+    width: 323px;
+    height: 164px;
+    float: right;
+    padding: 5px;
+    /*margin-top: -77px;*/
+    /*margin-bottom: 40px;*/
+    /*margin-right: 3px;*/
+    overflow: scroll;
+    text-align: justify;
+    position: absolute;
+    right: 0px;
+    top: -97px;
+}
+
+.op {
+    margin-left: 75px;
+    margin-top: -18px;
+    margin-bottom: 12px;
+}
+
+label.radio-inline {
+    margin-left: 15px;
+    font-size: 14px;
+}
+
+.no_items {
+    float: right;
+    margin-right: 4px;
+    margin-bottom: 5px;
+}
+
+.meta_compare {
+    margin-top: -3px;
+}
+
+.role_name {
+    font-weight: bold;
+    margin-right: 57px;
+}
+
+.op_name {
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 15px;
+}
+
+select.selectpicker {
+    position: absolute!important;
+    bottom: 0;
+    left: 50%;
+    width: .11px!important;
+    height: 100%!important;
+    padding: 0!important;
+    opacity: 0!important;
+    border: none;
+}
+
+
+/*============================= End of Styles ===============================*/

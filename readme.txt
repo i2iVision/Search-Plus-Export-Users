@@ -1,6 +1,6 @@
 === Search Plus Export Users ===
 Auther: i2ivision ( PHPdev5 )
-Version: 0.1.5 beta
+Version: 1.0
 Plugin URL: www.i2ivision.com
 Tags: search,filter,export,csv,file,users,meta,keys,role,operation
 Requires at least: 3.0
@@ -56,5 +56,13 @@ There is no screenshots just yet.
 = 0.1.5 =
 Beta release
 
+= 1.0 =
+first release
+
 === Upgrade Notice ===
-There is no need to upgrade just yet.
+= 0.1.5 =
+Add bulk action ( export user) on admin users page &
+Add some hooks to the plugin
+
+= 1.0 =
+convert ( Search Plus Export Users ) plugin to object oriented

@@ -1,4 +1,5 @@
 <!-- Search plus Export Users Admin Page -->
+<?php require_once( plugin_dir_path( __FILE__ ).'../speu.php' ) ?>
 <div class="wrap">
     <h1>Search / Export Users</h1>
     <h4><code>Searching</code> for <code>users</code> with specific keywords and <code>exporting</code> results in <code>CSV</code> file</h4>
@@ -14,7 +15,7 @@
         <?php wp_nonce_field( 'export-form' ); ?>
         <div class="loader">
             <span><input type="submit" class="btn_get_all button-primary" name="get_all" value="Get All Users" /></span>
-            <span class="loader_show"><img src="<?PHP echo plugins_url( '/assets/images/bx_loader.gif', __FILE__ ); ?>" width="16px" height="16px" /></span>
+            <span class="loader_show"><img src="<?PHP echo plugins_url( '../assets/images/bx_loader.gif', __FILE__ ); ?>" width="16px" height="16px" /></span>
         </div>       
         <input type="hidden" name="hidden_val" class="hidden_val" value="" />
 
@@ -90,10 +91,10 @@
         <table class="wp-list-table widefat fixed striped">
             <thead class="tbl_header">
             <?php 
-                $all_fields = getFieldSearch();
-                $all_keys = array_keys( $all_fields );
-                $all_values = array_values( $all_fields );
-                foreach( $all_values as $tbl_header ) {
+                $speu_obj = new SPEU();
+                $final_fields = $speu_obj->getFieldSearch();
+                $final_fields_value = array_values( $final_fields );
+                foreach( $final_fields_value as $tbl_header ) {
                     echo '<th style="font-weight:bold;">'. $tbl_header .'</th>';
                 }
             ?>
@@ -108,5 +109,4 @@
         </p>
         <input type="hidden" name="idusers" class="id_users" value="<?php echo $_GET['ids'] ?>" />
     </form>
-
 </div>

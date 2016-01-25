@@ -45,10 +45,10 @@ There is no screenshots just yet.
 
 === Changelog ===
 = 0.1.5 =
-Beta release
+ Beta release
 
 = 1.0 =
-first release
+ first release
 
 === Upgrade Notice ===
 = 0.1.5 =

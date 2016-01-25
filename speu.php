@@ -496,8 +496,6 @@ final class SPEU {
 	        foreach( $usersData as $user ) {
 	            $content[] = $user;
 	        }
-	        print_r( $this->args );
-	        print_r( $content );die();
 	        wp_send_json( $content );
 	    } else {
 	        echo -1;

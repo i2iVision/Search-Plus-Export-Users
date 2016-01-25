@@ -54,15 +54,15 @@ There is no screenshots just yet.
 
 === Changelog ===
 = 0.1.5 =
-Beta release
+ Beta release
 
 = 1.0 =
-first release
+ first release
 
 === Upgrade Notice ===
 = 0.1.5 =
-Add bulk action ( export user) on admin users page &
-Add some hooks to the plugin
+ Add bulk action ( export user) on admin users page &
+ Add some hooks to the plugin
 
 = 1.0 =
-convert ( Search Plus Export Users ) plugin to object oriented
+ convert ( Search Plus Export Users ) plugin to object oriented

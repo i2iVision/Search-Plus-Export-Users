@@ -15,7 +15,6 @@ function meta_key_data() {
             meta_key_menu += '<option value="' + meta[i].meta_key + '">' + meta[i].meta_key + '</option>';
         }
         jQuery( ".meta_name" ).last().html( meta_key_menu );
-
     }
     );
 }
@@ -47,6 +46,7 @@ function export_users_lists() {
             ids: ids
         },
         function( usersdata ) {
+            // console.log(usersdata);
             if( usersdata != -1 ) {   
                 var data = '';
                 var i;
@@ -135,7 +135,7 @@ jQuery(document).ready(function($) {
             jQuery( "#message" ).fadeIn();
             jQuery( ".notice-success p" ).text( "Now, You Can Export Results on Excel Sheet" );
             jQuery( ".loader_show" ).fadeOut();
-            jQuery( "#message" ).fadeOut();
+            jQuery( "#message" ).fadeOut(3000);
             jQuery( "input.hidden_val" ).val("D");
             jQuery( "input.export_csv" ).removeAttr( "disabled" );
         }

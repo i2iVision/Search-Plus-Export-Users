@@ -475,7 +475,7 @@ final class SPEU {
 		$this->final_fields_key = array_keys( $this->final_fields );
 		$this->final_fields_value = array_values( $this->final_fields );
 	    if( !empty( $this->users_id ) ) {
-	        if( strlen( $this->users_id ) > 1 ) {
+	        if( preg_match( "," , $this->users_id )  ) {
 	            $e_id = explode( ',', $this->users_id );
 	            array_pop( $e_id );
 	            $this->args = array( 'include'    => $e_id , 

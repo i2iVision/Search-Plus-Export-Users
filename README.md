@@ -1,7 +1,7 @@
 # Search-Plus-Export-Users
 
 Auther: i2ivision ( PHPdev5 )
-Version: 1.0
+Version: 1.1
 Plugin URL: www.i2ivision.com
 Tags: search,filter,export,csv,file,users,meta,keys,role,operation
 Requires at least: 3.0
@@ -27,12 +27,27 @@ Search Plus Export Users's Features:
 5. then click "Search" button to show results on the table.
 6. after searching for users that you want, you can click "Export" button to export results in CSV file.
 7. you can add "Notes" for users that used this plugin by clicking "Setting" menu in the plugin, add notes then it will show in "Notes" box in the plugin's page.
-
+8. Add some hooks for plugin users :
+	a. add_filter( 'export_users_template' , filename.php )
+		hook used to change plugin main template ( return String ) 
+	b.add_filter( 'speu_add_fields' , users fields array )
+		hook used to remove or add new field for users search or export ( return Array )
+		Note: array keys must be like users fields name in Users table : ( 'ID', 'user_login', 'user_nicename', 'user_email', 'user_url', 'user_registered', 'user_status', 'display_name' )
+		Note: you can't add user password or user activation key
+	c. add_filter( 'speu_csv_file_name' , name of csv file )
+		hook used to change name of csv file ( return String)
+	d. add_filter( 'speu_roles_search' , users roles array )
+		hook used to remove or add new role to users role array ( return Array )
+9. Create Import option for the exported CSV
+	On the import screen make options like :
+		- Export users with generic passwords
+		- Export users with custom one password for all.
+		- Export users without all usermeta 
+		- Export users with  some usermeta.
 
 === Installation ===
 1.  Upload your plugin folder to the '/wp-content/plugins/' directory.
 2.  Activate the plugin through the 'Plugins/' menu in WordPress.
-
 
 
 === Frequently Asked Questions ===
@@ -52,8 +67,11 @@ There is no screenshots just yet.
 
 === Upgrade Notice ===
 = 0.1.5 =
-Add bulk action ( export user) on admin users page &
-Add some hooks to the plugin
+ Add bulk action ( export user) on admin users page &
+ Add some hooks to the plugin
 
 = 1.0 =
-convert ( Search Plus Export Users ) plugin to object oriented
+ convert ( Search Plus Export Users ) plugin to object oriented
+
+= 1.1 =
+Create Import option for the exported CSV

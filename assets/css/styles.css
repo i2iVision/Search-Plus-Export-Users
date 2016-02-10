@@ -151,5 +151,59 @@ select.selectpicker {
     border: none;
 }
 
+.checkname:before {
+    content: "";
+    margin-left: 6px;
+}
+
+span.checkname {
+    margin-right: 95px;
+    font-weight: bold;
+}
+
+p.import {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 10px;
+}
+
+input.import_btn {
+    width: 200px;
+    font-size: 50px;
+}
+
+div#msg_setting {
+    width: 500px;
+    position: absolute;
+    left: 167px;
+    top: 127px;
+}
+
+div.wr {
+    margin-top: 55px;
+}
+
+p.checkable_options {
+    margin-left: 48px;
+}
+
+div.speu {
+    border-color: #337ab7;
+}
+
+.sol-container {
+    margin-top: 24px;
+}
+
+.sol-current-selection {
+    position: relative;
+    top: 67px;
+}
+
+.text-center:before {
+   content: "\e027";
+   font-family: 'Glyphicons Halflings';
+   font-size: 18px;
+}
 
 /*============================= End of Styles ===============================*/

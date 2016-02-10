@@ -54,15 +54,28 @@ final class SPEU {
 	public $file_extension = ".csv";
 	public $all_roles = array();
 	private static $instance;
+	//mimetypes for csv when importing file
+	protected $csv_mimetypes = array();
+	protected $rand_pass;
+	//array of data for csv file
+	protected $getData = array();
 
 
 	public function __construct() {
-		$this->actual_fields = array( 'ID','user_login','user_nicename','user_email','user_url','user_registered','user_status','display_name' );
+		$this->actual_fields = array( 'ID','user_login','user_nicename' ,'user_email','user_url','user_registered','user_status','display_name' );
 		$this->speu_fields = array( 'ID'            => 'ID',
-	                          	 	'display_name'  => 'User Name',
+	                          	 	'user_login'  => 'User Name',
 	                             	'user_email'    => 'E-mail'
 	                        	   );
 		$this->csv_name = "export-results_" . date( 'Y-m-d' );
+		$this->csv_mimetypes = array(
+			                            'text/csv',
+			                            'application/csv',
+			                            'text/comma-separated-values',
+			                            'application/excel',
+			                            'application/vnd.ms-excel',
+			                            'application/octet-stream',
+                           			);
 		add_action( 'admin_init', array( $this , 'add_role_caps' ) );
 		add_action( 'admin_menu', array( $this , 'export_users_actions' ) );
 		add_action( 'admin_init', array( $this , 'plugin_helper_scripts' ) );
@@ -76,6 +89,8 @@ final class SPEU {
 		add_filter('user_row_actions', array( $this , 'user_action_links' ), 10, 2);
 		add_action( 'admin_action_export', array( $this , 'selected_bulk_action_handler' ) );
 		add_action( 'wp_ajax_export-users-lists', array( $this , 'export_users_lists_action' ) );
+		add_action( "admin_init", array( $this , 'import_csv' ) );
+		add_action( 'wp_ajax_load_usermeta_sol', array( $this , 'load_usermeta_sol' ) );
 	}
 
 	// Prevent cloning of the instance
@@ -150,7 +165,11 @@ final class SPEU {
 	public function plugin_helper_scripts() {
 	    wp_enqueue_script( 'script_get_users', plugins_url( 'assets/js/get_users.js', __FILE__ ) );
 	    wp_enqueue_script( 'script_Block_UI', plugins_url( 'assets/js/jquery.blockUI.js', __FILE__ ) );
+	    wp_enqueue_script( 'script_fileStyle', plugins_url( 'assets/js/filestyle.js', __FILE__ ) );
 	    wp_enqueue_style( 'script_get_users', plugins_url( 'assets/css/styles.css', __FILE__ ) );
+	    wp_enqueue_script( 'script_bootstrap', 'http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js' );
+	    wp_enqueue_script( 'script_SOL', plugins_url( 'assets/js/sol.js', __FILE__ ) );
+	    wp_enqueue_style( 'style_SOL', plugins_url( 'assets/css/sol.css', __FILE__ ) );
 	    wp_localize_script( 'script_get_users', 'MyAjax', array( 'ajaxurl'   => admin_url( 'admin-ajax.php' ) ) );
 	}
 
@@ -279,9 +298,9 @@ final class SPEU {
 	            } else {
 	            	$this->meta_key = $_REQUEST["meta_name"];
 	                if( in_array( "no_value", $this->meta_key ) ) {
-	                    $finalHeader = $this->final_fields_value;
+	                    $finalHeader = $this->final_fields_key;
 	                } else {
-	                    $headerArray = $this->final_fields_value;
+	                    $headerArray = $this->final_fields_key;
 	                    $headermerge = array_merge( $headerArray, $this->meta_key );
 	                    $finalHeader = array_unique( $headermerge );
 	                }
@@ -346,19 +365,20 @@ final class SPEU {
 	        }
 	    }
 	    $this->args = array(
-	                   'fields'     => $this->final_fields_key,
-	                   'orderby'    => 'ID',
-	                   'order'      => 'ASC',
-	                   'role'       => $this->role_data,
-	                   'meta_query' => $queryArray
-	                  );
+			                 'fields'     => $this->final_fields_key,
+			                 'orderby'    => 'ID',
+			                 'order'      => 'ASC',
+			                 'role'       => $this->role_data,
+			                 'meta_query' => $queryArray
+	                  		);
 	    $all_users = get_users( $this->args );
 	    if ( $all_users ) {
 	        foreach ( $all_users as $each_user ) {
 	            $resultSearch[] = $each_user;
 	            $IdsArray[] = array( $each_user->ID );
 	        }
-	        $FinalArray = array( "dataTable" => $resultSearch,
+	        $FinalArray = array( 
+	        					 "dataTable" => $resultSearch,
 	                             "IDs"       => $IdsArray,
 	                             "Header"    => $this->final_fields_value
 	                            );
@@ -492,7 +512,6 @@ final class SPEU {
 	                        	   ); 
 	        }
 	        $usersData = get_users( $this->args );
-	        // print_r($this->users_id);die();
 	        foreach( $usersData as $user ) {
 	            $content[] = $user;
 	        }
@@ -502,6 +521,123 @@ final class SPEU {
 	        die();
 	    }
 	}
+
+
+	/**
+	 * @author: i2ivision ( PHPdev5 )
+	 * import_csv import CSV file data to Users Lists
+	 * @return String
+	 */
+	public function import_csv() {
+		if( isset( $_POST["import_btn"] ) ) {
+		    $file_name = $_FILES["csv_file"]["name"];
+		    $meta_selectable = $_POST["meta_enter"];
+		    $main_header = $this->actual_fields;
+		    array_shift( $main_header );
+		    print_r($_POST["character"]);
+		    $path = plugin_dir_path( __FILE__ ).'/assets/uploads/'.$file_name;
+		    $userdata = array();
+		    $final_title = array();
+		    if( in_array( $_FILES["csv_file"]["type"] , $this->csv_mimetypes ) != false  ) {
+		        if ( file_exists( plugin_dir_path( __FILE__ )."/assets/uploads/" . $_FILES["csv_file"]["name"] ) ) {
+		            $msg_setting = $_FILES["csv_file"]["name"] . " already exists. ";
+		        } elseif( !isset( $_POST["checkable"] ) ) {
+                	$msg_setting = "please Check one of options to import";
+                } else { 
+		            	move_uploaded_file( $_FILES["csv_file"]["tmp_name"], $path );
+		                $file = fopen( $path,"r" );
+		                $row = 0;
+		                if( $_POST["checkable"] == 1 ) {
+			                $this->rand_pass = wp_generate_password( 10,false );
+			            }
+			            if( $_POST["checkable"] == 2 ) {
+			                $this->rand_pass = '123456';
+			            }
+		                while ( ( $this->getData = fgetcsv( $file, 10000 ) ) !== FALSE )
+		                    {
+		                    	$i=1;
+		                    	if($row == 1) {
+		                    		foreach ( $this->getData as $header_value ) {
+		                    				$import_header[] = $header_value;	
+		                    		}
+		                    		array_shift( $import_header );
+		                    		if( $_POST["checkable"] == 3 ) {
+			                    		foreach( $import_header as $each_title ) {
+			                    			if( in_array( $each_title, $this->actual_fields ) ) {
+			                    				array_push( $final_title, $each_title );
+			                    			}
+			                    		}
+			                    		$import_header = $final_title;
+		                    		}
+		                    		elseif ( $_POST["checkable"] == 4 ) {
+		                    			$totalHeader = array_intersect( $import_header, $main_header );
+		                    			foreach( $meta_selectable as $each_select ) {
+		                    				if( in_array( $each_select , $import_header ) ) {
+		                    					array_push( $totalHeader , $each_select );
+		                    				}
+		                    			}
+		                    			$import_header = $totalHeader;
+		                    		}
+		                    	}	
+		                    	if($row >1) {
+		                            if ( email_exists( $this->getData[2] ) ) {
+		                              continue; 
+		                            }
+		                            foreach( $import_header as $key => $value ) {
+		                            	$userdata[$value] = $this->getData[$i];
+		                         		$i++;
+		                            }   
+		                            $userdata['user_pass'] = $this->rand_pass;
+		                            	$user = wp_insert_user( $userdata );
+		                        }
+		                        $row++;
+		                    }		
+		                $msg_setting = "Import Users Successfully</br>";
+		        }        
+		    } else {
+		        $msg_setting = "Invalid CSV file";
+		    }
+		    fclose( $file );
+		    echo '<div id="msg_setting" class="updated notice speu notice-error below-h2">
+		            <p>'. $msg_setting .'</p>
+		          </div>';
+		          print_r($import_header);
+		}
+	}
+
+	/**
+	 * @author: i2ivision ( PHPdev5 )
+	 * load_usermeta_sol load usermeta from csv file into drop-down menu
+	 * @return Array
+	 */
+/*	public function load_usermeta_sol() {
+			$file_data = $_REQUEST["file_data"];
+			$file_fakename = explode( '\\', $file_data );
+			$file_name = $file_fakename['1'];
+			$path = plugin_dir_path( __FILE__ ).'/assets/uploads/'.$file_name;
+			$file = fopen( $path,"r" );
+			$row = 0;
+			$result = array();
+			$import_header = array();
+			$getData = fgetcsv( $file, 10000 , ";" );
+	        while ( ( $getData = fgetcsv( $file, 10000 , ";" ) ) !== FALSE )
+	    	{	
+	    		if( $row == 1 ) {
+		            foreach ( $getData as $header_value ) {
+	        				$import_header[] = $header_value;	
+	        		}
+	        		$results = array_diff( $import_header, $this->actual_fields );
+	        		foreach( $results as $e_result ) {
+	        			$result[] = $e_result;
+	        		}
+	    		    		wp_send_json( $temp );
+	    		}
+	    		$row++;
+	    	}
+	    	print_r( $getData );
+	    	fclose($file);
+
+	}*/	
 
 
 }

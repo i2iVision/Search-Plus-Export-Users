@@ -123,7 +123,7 @@ jQuery(document).ready(function($) {
         load_sol();
     });*/
 
-    jQuery('#my-select').searchableOptionList({
+/*    jQuery('#my-select').searchableOptionList({
         showSelectAll: true,
         texts: {
                 noItemsAvailable: 'no usermeta found',
@@ -131,7 +131,7 @@ jQuery(document).ready(function($) {
                 selectNone: 'Select none',
                 searchplaceholder: 'Click to select usermeta'
         }
-    });
+    });*/
 
 //================= [PHPdev5] Call Function createInput(chck) ==============  
    createInput(chck);

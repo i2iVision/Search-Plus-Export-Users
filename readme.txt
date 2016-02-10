@@ -1,6 +1,6 @@
 === Search Plus Export Users ===
 Auther: i2ivision ( PHPdev5 )
-Version: 1.0
+Version: 1.1
 Plugin URL: www.i2ivision.com
 Tags: search,filter,export,csv,file,users,meta,keys,role,operation
 Requires at least: 3.0
@@ -37,7 +37,12 @@ Search Plus Export Users's Features:
 		hook used to change name of csv file ( return String)
 	d. add_filter( 'speu_roles_search' , users roles array )
 		hook used to remove or add new role to users role array ( return Array )
-
+9. Create Import option for the exported CSV
+	On the import screen make options like :
+		- Export users with generic passwords
+		- Export users with custom one password for all.
+		- Export users without all usermeta 
+		- Export users with  some usermeta.
 
 === Installation ===
 1.  Upload your plugin folder to the '/wp-content/plugins/' directory.
@@ -66,3 +71,6 @@ There is no screenshots just yet.
 
 = 1.0 =
  convert ( Search Plus Export Users ) plugin to object oriented
+
+= 1.1 =
+Create Import option for the exported CSV

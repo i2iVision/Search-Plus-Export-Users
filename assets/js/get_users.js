@@ -82,59 +82,19 @@ function export_users_lists() {
     );
 }
 
-//======== [PHPdev5] function to getnerate input field when input checked =========
-    function createInput( chck ) {
-        if( jQuery( chck ).is( ':checked' ) ) {
-            jQuery('<input>', {
-                id: 'meta_enter',
-                class: 'meta_enter',
-                name: 'meta_enter[]',
-                type: 'text'
+//======== [PHPdev5] function to getnerate input field when radio button with value "4" checked =========
 
-            }).appendTo( 'p.checkable_options' );
-        }
-        else if( jQuery( chck ).not( ':checked' ) ) {
-            jQuery('input.meta_enter').remove();
-        }
+    function createInput( chck ) {
+            if( jQuery(chck).attr("value") == 4 ){
+                jQuery("input.meta_enter").show();
+            }
+            else {
+                jQuery("input.meta_enter").hide();
+            }
+
     }
 
-//======== [PHPdev5] function to load usermeta for SOL =========
-/*    function load_sol() {
-        var file_data = jQuery('input.form-control').val();
-        jQuery.post(
-        MyAjax.ajaxurl,
-        {
-            action: 'load_usermeta_sol',
-            file_data: file_data,
-
-        },
-        function( role ) {
-            console.log(role);
-            // jQuery( "#my-select" ).html( role );
-        }
-        );
-    }*/
-
 jQuery(document).ready(function($) {
-
-    
-/*    jQuery('input#load_header').live('click',function(e) {
-        e.preventDefault();
-        load_sol();
-    });*/
-
-/*    jQuery('#my-select').searchableOptionList({
-        showSelectAll: true,
-        texts: {
-                noItemsAvailable: 'no usermeta found',
-                selectAll: 'Select all usermeta',
-                selectNone: 'Select none',
-                searchplaceholder: 'Click to select usermeta'
-        }
-    });*/
-
-//================= [PHPdev5] Call Function createInput(chck) ==============  
-   createInput(chck);
 
 //================= [PHPdev5] Call Function export_users_lists() ==============  
     export_users_lists();

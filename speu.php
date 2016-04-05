@@ -323,6 +323,7 @@ final class SPEU {
 	            foreach( $en_active_export as $value ) {
 	                fputcsv( $op, $value ); 
 	            } 
+	            update_option( 'speu_export_file',$name );
 	        fclose( $op );
 	        die();
 	    }
@@ -531,10 +532,13 @@ final class SPEU {
 	public function import_csv() {
 		if( isset( $_POST["import_btn"] ) ) {
 		    $file_name = $_FILES["csv_file"]["name"];
+		    //value of text input for option some user meta
 		    $meta_selectable = $_POST["meta_enter"];
+		    $usermeta_data = explode(",", $meta_selectable);
+		    //all users fields
 		    $main_header = $this->actual_fields;
 		    array_shift( $main_header );
-		    print_r($_POST["character"]);
+		    // print_r($_POST["character"]);
 		    $path = plugin_dir_path( __FILE__ ).'/assets/uploads/'.$file_name;
 		    $userdata = array();
 		    $final_title = array();
@@ -546,6 +550,7 @@ final class SPEU {
                 } else { 
 		            	move_uploaded_file( $_FILES["csv_file"]["tmp_name"], $path );
 		                $file = fopen( $path,"r" );
+		                // First row for date and time
 		                $row = 0;
 		                if( $_POST["checkable"] == 1 ) {
 			                $this->rand_pass = wp_generate_password( 10,false );
@@ -556,6 +561,7 @@ final class SPEU {
 		                while ( ( $this->getData = fgetcsv( $file, 10000 ) ) !== FALSE )
 		                    {
 		                    	$i=1;
+		                    	// Second row for header data
 		                    	if($row == 1) {
 		                    		foreach ( $this->getData as $header_value ) {
 		                    				$import_header[] = $header_value;	
@@ -571,18 +577,21 @@ final class SPEU {
 		                    		}
 		                    		elseif ( $_POST["checkable"] == 4 ) {
 		                    			$totalHeader = array_intersect( $import_header, $main_header );
-		                    			foreach( $meta_selectable as $each_select ) {
+		                    			foreach( $usermeta_data as $each_select ) {
 		                    				if( in_array( $each_select , $import_header ) ) {
 		                    					array_push( $totalHeader , $each_select );
 		                    				}
 		                    			}
 		                    			$import_header = $totalHeader;
 		                    		}
-		                    	}	
+		                    	} // end
+
+		                    	// for all data in csv file	
 		                    	if($row >1) {
 		                            if ( email_exists( $this->getData[2] ) ) {
-		                              continue; 
+		                              	continue; 
 		                            }
+		                            // $value => user fields
 		                            foreach( $import_header as $key => $value ) {
 		                            	$userdata[$value] = $this->getData[$i];
 		                         		$i++;
@@ -601,43 +610,20 @@ final class SPEU {
 		    echo '<div id="msg_setting" class="updated notice speu notice-error below-h2">
 		            <p>'. $msg_setting .'</p>
 		          </div>';
-		          print_r($import_header);
+		          // print_r($import_header);
 		}
 	}
 
 	/**
 	 * @author: i2ivision ( PHPdev5 )
-	 * load_usermeta_sol load usermeta from csv file into drop-down menu
-	 * @return Array
-	 */
-/*	public function load_usermeta_sol() {
-			$file_data = $_REQUEST["file_data"];
-			$file_fakename = explode( '\\', $file_data );
-			$file_name = $file_fakename['1'];
-			$path = plugin_dir_path( __FILE__ ).'/assets/uploads/'.$file_name;
-			$file = fopen( $path,"r" );
-			$row = 0;
-			$result = array();
-			$import_header = array();
-			$getData = fgetcsv( $file, 10000 , ";" );
-	        while ( ( $getData = fgetcsv( $file, 10000 , ";" ) ) !== FALSE )
-	    	{	
-	    		if( $row == 1 ) {
-		            foreach ( $getData as $header_value ) {
-	        				$import_header[] = $header_value;	
-	        		}
-	        		$results = array_diff( $import_header, $this->actual_fields );
-	        		foreach( $results as $e_result ) {
-	        			$result[] = $e_result;
-	        		}
-	    		    		wp_send_json( $temp );
-	    		}
-	    		$row++;
-	    	}
-	    	print_r( $getData );
-	    	fclose($file);
-
-	}*/	
+	 * Retrieve configuration values for dropbox
+	 * @return String
+	 */	
+	public function get_custom_option( $option_name = null ){
+	  $config = get_option('speu_dropbox_config');
+	  if ( empty( $option_name ) ) return $config;
+	  return $config[$option_name];
+	}
 
 
 }

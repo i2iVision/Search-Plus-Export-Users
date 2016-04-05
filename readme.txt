@@ -1,14 +1,14 @@
 === Search Plus Export Users ===
 Auther: i2ivision ( PHPdev5 )
-Version: 1.1
+Version: 1.2
 Plugin URL: www.i2ivision.com
-Tags: search,filter,export,csv,file,users,meta,keys,role,operation
+Tags: search,filter,export,csv,file,users,meta,keys,role,operation,import,options,dropbox
 Requires at least: 3.0
 Tested up to: 4.3
 Stable tag: 4.3.1
 License: GPLv3
 
-Search Plus Export Users is a plugin for Searching for users with specific keywords and Exporting results in CSV file.
+Search Plus Export Users is a plugin for Searching for users with specific keywords and Exporting results in CSV file and newly feature in setting page.
 
 === Description ===
 Search Plus Export Users's Features:
@@ -25,8 +25,7 @@ Search Plus Export Users's Features:
 4. you can remove fields that you added for searching, if you don't need it.
 5. then click "Search" button to show results on the table.
 6. after searching for users that you want, you can click "Export" button to export results in CSV file.
-7. you can add "Notes" for users that used this plugin by clicking "Setting" menu in the plugin, add notes then it will show in "Notes" box in the plugin's page.
-8. Add some hooks for plugin users :
+7. Add some hooks for plugin users :
 	a. add_filter( 'export_users_template' , filename.php )
 		hook used to change plugin main template ( return String ) 
 	b.add_filter( 'speu_add_fields' , users fields array )
@@ -37,12 +36,17 @@ Search Plus Export Users's Features:
 		hook used to change name of csv file ( return String)
 	d. add_filter( 'speu_roles_search' , users roles array )
 		hook used to remove or add new role to users role array ( return Array )
-9. Create Import option for the exported CSV
+8. Create Import option for the exported CSV
 	On the import screen make options like :
 		- Export users with generic passwords
 		- Export users with custom one password for all.
 		- Export users without all usermeta 
 		- Export users with  some usermeta.
+9. Create export option for exported CSV into dropbox account
+	on the import screen make option for :
+		- Enter configuration for your dropbox api such as (app_id, access_token, etc.).
+		- choose the file to export into dropbox.
+		- you can choose multiple files to export.
 
 === Installation ===
 1.  Upload your plugin folder to the '/wp-content/plugins/' directory.
@@ -64,6 +68,9 @@ There is no screenshots just yet.
 = 1.0 =
  first release
 
+= 1.2 =
+ second release
+
 === Upgrade Notice ===
 = 0.1.5 =
  Add bulk action ( export user) on admin users page &
@@ -74,3 +81,6 @@ There is no screenshots just yet.
 
 = 1.1 =
 Create Import option for the exported CSV
+
+= 1.2 =
+Create export option for exported CSV into dropbox account

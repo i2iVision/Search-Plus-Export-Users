@@ -167,16 +167,16 @@ p.import {
     padding-top: 10px;
 }
 
-input.import_btn {
+/*input.import_btn {
     width: 200px;
     font-size: 50px;
-}
+}*/
 
 div#msg_setting {
     width: 500px;
     position: absolute;
-    left: 167px;
-    top: 127px;
+    left: 181px;
+    top: 105px;
 }
 
 div.wr {
@@ -205,5 +205,7 @@ div.speu {
    font-family: 'Glyphicons Halflings';
    font-size: 18px;
 }
+
+
 
 /*============================= End of Styles ===============================*/
